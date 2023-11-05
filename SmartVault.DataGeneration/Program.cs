@@ -35,10 +35,17 @@ namespace SmartVault.DataGeneration
                 for (int i = 0; i < 100; i++)
                 {
                     var randomDayIterator = RandomDay().GetEnumerator();
+                    //**********************************************
+                    //Where is the validation for stop the cycle????
+
                     randomDayIterator.MoveNext();
+
+                    //We need to add CreatedDate on models
                     connection.Execute($"INSERT INTO User (Id, FirstName, LastName, DateOfBirth, AccountId, Username, Password) VALUES('{i}','FName{i}','LName{i}','{randomDayIterator.Current.ToString("yyyy-MM-dd")}','{i}','UserName-{i}','e10adc3949ba59abbe56e057f20f883e')");
                     connection.Execute($"INSERT INTO Account (Id, Name) VALUES('{i}','Account{i}')");
 
+                    //**********************************************
+                    // We are creating 100* 10000 = 1000000 of rows better if we call  a bulk  or something?
                     for (int d = 0; d < 10000; d++, documentNumber++)
                     {
                         var documentPath = new FileInfo("TestDoc.txt").FullName;
