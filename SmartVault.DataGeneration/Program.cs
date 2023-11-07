@@ -1,11 +1,10 @@
-﻿using Dapper;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Configuration;
 using SmartVault.Library;
 using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
+using System.Reflection;
+using System.Text;
 using System.Xml.Serialization;
 
 namespace SmartVault.DataGeneration
@@ -19,56 +18,53 @@ namespace SmartVault.DataGeneration
                 .AddJsonFile("appsettings.json").Build();
 
             SQLiteConnection.CreateFile(configuration["DatabaseFileName"]);
-            File.WriteAllText("TestDoc.txt", $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}");
-
-            using (var connection = new SQLiteConnection(string.Format(configuration?["ConnectionStrings:DefaultConnection"] ?? "", configuration?["DatabaseFileName"])))
+            CreateFileData();
+            string[] files = Directory.GetFiles(@"..\..\..\BusinessObjectSchema");
+            var document = new FileInfo("files\\TestDoc.txt");
+            string connectionString = string.Format(configuration?["ConnectionStrings:DefaultConnection"] ?? "", configuration?["DatabaseFileName"]);
+            using (var dataSeed = new DataSeedService(
+                new DataSeedConfiguration { 
+                    ConnectionString = connectionString,
+                    BulkUsers = 100, 
+                    BulkDocuments = 10000, 
+                    DocumentFileLenght = document.Length,
+                    DocumentFilePath = document.FullName
+                    }))
             {
-                var files = Directory.GetFiles(@"..\..\..\..\BusinessObjectSchema");
-                for (int i = 0; i <= 2; i++)
-                {
-                    var serializer = new XmlSerializer(typeof(BusinessObject));
-                    var businessObject = serializer.Deserialize(new StreamReader(files[i])) as BusinessObject;
-                    connection.Execute(businessObject?.Script);
-
-                }
-                var documentNumber = 0;
-                for (int i = 0; i < 100; i++)
-                {
-                    var randomDayIterator = RandomDay().GetEnumerator();
-                    //**********************************************
-                    //Where is the validation for stop the cycle????
-
-                    randomDayIterator.MoveNext();
-
-                    //We need to add CreatedDate on models
-                    connection.Execute($"INSERT INTO User (Id, FirstName, LastName, DateOfBirth, AccountId, Username, Password) VALUES('{i}','FName{i}','LName{i}','{randomDayIterator.Current.ToString("yyyy-MM-dd")}','{i}','UserName-{i}','e10adc3949ba59abbe56e057f20f883e')");
-                    connection.Execute($"INSERT INTO Account (Id, Name) VALUES('{i}','Account{i}')");
-
-                    //**********************************************
-                    // We are creating 100* 10000 = 1000000 of rows better if we call  a bulk  or something?
-                    for (int d = 0; d < 10000; d++, documentNumber++)
-                    {
-                        var documentPath = new FileInfo("TestDoc.txt").FullName;
-                        connection.Execute($"INSERT INTO Document (Id, Name, FilePath, Length, AccountId) VALUES('{documentNumber}','Document{i}-{d}.txt','{documentPath}','{new FileInfo(documentPath).Length}','{i}')");
-                    }
-                }
-
-                var accountData = connection.Query("SELECT COUNT(*) FROM Account;");
-                Console.WriteLine($"AccountCount: {JsonConvert.SerializeObject(accountData)}");
-                var documentData = connection.Query("SELECT COUNT(*) FROM Document;");
-                Console.WriteLine($"DocumentCount: {JsonConvert.SerializeObject(documentData)}");
-                var userData = connection.Query("SELECT COUNT(*) FROM User;");
-                Console.WriteLine($"UserCount: {JsonConvert.SerializeObject(userData)}");
+                dataSeed.GenerateData();
+                dataSeed.ExecuteDDLScripts(GetAllBussinessScript(files));
+                dataSeed.ExecuteDMLScripts();
             }
+            Console.ReadLine();
         }
 
-        static IEnumerable<DateTime> RandomDay()
+        private static string GetAllBussinessScript(string[] files)
         {
-            DateTime start = new DateTime(1985, 1, 1);
-            Random gen = new Random();
-            int range = (DateTime.Today - start).Days;
-            while (true)
-                yield return start.AddDays(gen.Next(range));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i <= 2; i++)
+            {
+                var serializer = new XmlSerializer(typeof(BusinessObject));
+                var businessObject = serializer.Deserialize(new StreamReader(files[i])) as BusinessObject;
+                sb.Append(businessObject?.Script + Environment.NewLine);
+            }
+            return sb.ToString();
+        }
+        private static void CreateFileData()
+        {
+            string path = Directory.GetParent(Assembly.GetExecutingAssembly().Location) + "\\files";
+            string filePath = Path.Combine(path, "TestDoc.txt"); // Ruta completa del archivo
+
+            string content = $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}";
+
+
+            // Asegúrate de que el directorio exista, si no, créalo
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
+            File.WriteAllText(filePath, content);
+
         }
     }
 }

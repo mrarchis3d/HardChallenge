@@ -3,6 +3,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System;
 using SmartVault.Library;
+using System.Diagnostics;
 
 namespace SmartVault.CodeGeneration
 {
@@ -15,7 +16,7 @@ namespace SmartVault.CodeGeneration
             var mainMethod = context.Compilation.GetEntryPoint(context.CancellationToken);
 
             // Build up the source code
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < context.AdditionalFiles.Length; i++)
             {
                 var file = context.AdditionalFiles[i];
                 var fileContents = file.GetText().ToString();
@@ -42,14 +43,22 @@ namespace SmartVault.CodeGeneration
                 }}
                 ";
                 context.AddSource($"{name}.generated.cs", businessObjectClassString);
-
-
             }
+
+            context.ReportDiagnostic(
+               Diagnostic.Create(
+                   new DiagnosticDescriptor(
+                       "GEN001",
+                       "Code Generated",
+                       "Code generated succesfully",
+                       "Code Generated",
+                       DiagnosticSeverity.Info,
+                       true),
+                   Location.None));
         }
 
         public void Initialize(GeneratorInitializationContext context)
         {
-            // No initialization required for this one
         }
     }
 }

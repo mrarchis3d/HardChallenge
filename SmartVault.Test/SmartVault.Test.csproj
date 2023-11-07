@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	<BaseOutputPath>$(SolutionDir)\Build</BaseOutputPath>
+	<IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="Moq.Dapper" Version="1.0.7" />
+    <PackageReference Include="NUnit" Version="3.13.3" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
+    <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
+    <PackageReference Include="coverlet.collector" Version="3.1.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SmartVault.CodeGeneration\SmartVault.CodeGeneration.csproj" />
+    <ProjectReference Include="..\SmartVault.DataGeneration\SmartVault.DataGeneration.csproj" />
+    <ProjectReference Include="..\SmartVault.Program\SmartVault.Program.csproj" />
+  </ItemGroup>
+
+</Project>

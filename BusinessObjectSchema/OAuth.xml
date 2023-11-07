@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<businessObject>
+	<propertyGroup>
+		<property name="Id" type="int" />
+		<property name="UserId " type="int" />
+		<property name="Provider " type="string" />
+		<property name="AccessToken " type="string" />
+		<property name="RefreshToken " type="string" />
+		<property name="ExpiresIn" type="int" />
+		<property name="IdToken" type="string" />
+		<property name="CreatedDate" type="System.DateTime" />
+		<property name="ExpirationDate" type="System.DateTime" />
+	</propertyGroup>
+	<script>
+		CREATE TABLE OAuth (
+			Id INTEGER PRIMARY KEY,
+			UserId INTEGER,
+			Provider TEXT,
+			AccessToken TEXT,
+			RefreshToken TEXT,
+			ExpiresIn INTEGER,
+			IdToken TEXT,
+			CreatedDate DateTime,
+			ExpirationDate DateTime
+		);
+	</script>
+</businessObject>
