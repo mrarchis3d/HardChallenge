@@ -97,19 +97,19 @@ namespace SmartVault.DataGeneration
                 int docCounter = 0;
                 while (docCounter < _dataSeedConfiguration.BulkDocuments)
                 {
-                    _documentData!.Add(GetDocumentData(docId, userId));
+                    _documentData!.Add(GetDocumentData(docId, userId, docCounter));
                     docId++;
                     docCounter++;
                 }
                 userId++;
             }
         }
-        private Document GetDocumentData(int id, int userId)
+        private Document GetDocumentData(int id, int userId, int docCounter)
         {
             return new Document
             {
                 Id = id,
-                Name = Constants.DOCUMENT + id + Constants.HYPHEN + id + Constants.EXTENSION,
+                Name = Constants.DOCUMENT + userId + Constants.HYPHEN + docCounter + Constants.EXTENSION,
                 FilePath = _dataSeedConfiguration.DocumentFilePath,
                 Length = _dataSeedConfiguration.DocumentFileLenght,
                 AccountId = userId,
