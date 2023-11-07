@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using SmartVault.DataGeneration.Utils;
 using SmartVault.Program.BusinessObjects;
 using System;
 using System.Collections.Generic;
@@ -17,10 +18,11 @@ namespace SmartVault.DataGeneration
         private List<Account>? _accountData;
         private List<Document>? _documentData;
         private DataSeedConfiguration _dataSeedConfiguration;
-        private readonly string _content;
         private readonly string _path;
 
         public List<Document> GetDocuments => _documentData ?? (_documentData = new List<Document>());
+        public List<User> GetUsers => _userData ?? (_userData = new List<User>());
+        public List<Account> GetAccounts => _accountData ?? (_accountData = new List<Account>());
 
         public DataSeedService(DataSeedConfiguration dataSeedConfiguration)
         {
@@ -28,15 +30,12 @@ namespace SmartVault.DataGeneration
             _userData = new List<User>();
             _accountData = new List<Account>();
             _documentData = new List<Document>();
-            _content = Getcontent;
             _path = Directory.GetParent(Assembly.GetExecutingAssembly().Location) + "\\files";
         }
 
-        private string Getcontent => "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine;
 
-        public int ExecuteDDLScripts(string script)
+        public void ExecuteDDLScripts(string script)
         {
-            int executedScript = 0;
             using (IDbConnection connection = new SQLiteConnection(_dataSeedConfiguration.ConnectionString))
             {
                 connection.Open();
@@ -44,22 +43,19 @@ namespace SmartVault.DataGeneration
                 {
                     try
                     {
-                        executedScript += connection.Execute(script);
+                        connection.Execute(script);
                         transaction.Commit();
                     }
                     catch (Exception ex)
                     {
                         transaction.Rollback();
-                        Console.WriteLine($"Error DLL Scripts: {ex.Message}");
+                        throw;
                     }
                 }
             }
-            return executedScript;
         }
-
-        public int ExecuteDMLScripts()
+        public void ExecuteDMLScripts(bool printResult = false)
         {
-            int executedScript= 0;
             using (IDbConnection connection = new SQLiteConnection(_dataSeedConfiguration.ConnectionString))
             {
                 connection.Open();
@@ -67,12 +63,12 @@ namespace SmartVault.DataGeneration
                 {
                     try
                     {
-                        executedScript += connection.Execute("INSERT INTO User " +
+                        connection.Execute("INSERT INTO User " +
                             "(Id, FirstName, LastName, DateOfBirth, AccountId, Username, Password, CreatedDate) " +
                             "VALUES (@Id, @FirstName, @LastName, @DateOfBirth, @AccountId, @Username, @Password, @CreatedDate)", _userData, transaction);
-                        executedScript += connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES( @Id, @Name, @CreatedDate)", _accountData, transaction);
+                        connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES( @Id, @Name, @CreatedDate)", _accountData, transaction);
 
-                        executedScript += connection.Execute(
+                        connection.Execute(
                                     "INSERT INTO Document " +
                                     "(Id, Name, FilePath, Length, AccountId, CreatedDate) " +
                                     "VALUES (@Id, @Name, @FilePath, @Length, @AccountId, @CreatedDate)", _documentData, transaction);
@@ -83,14 +79,13 @@ namespace SmartVault.DataGeneration
                     {
                         transaction.Rollback();
                         Console.WriteLine($"Error DML SCRIPS: {ex.Message}");
+                        throw;
                     }
                 }
-
-                ConsoleUtils.PrintSeedingInformation(connection);
+                if(printResult)
+                    ConsoleUtils.PrintSeedingInformation(connection);
             }
-            return executedScript;
         }
-
         public void GenerateLocalDocuments()
         {
             foreach (var item in _documentData!)
@@ -98,19 +93,6 @@ namespace SmartVault.DataGeneration
                 CreateFileData(item.Name);
             }
         }
-
-        private void CreateFileData(string name)
-        {
-
-            string filePath = Path.Combine(_path, name);
-
-            if (!Directory.Exists(_path))
-            {
-                Directory.CreateDirectory(_path);
-            }
-            File.WriteAllText(filePath, _content);
-        }
-
         public void GenerateData()
         {
             int userId = 0;
@@ -129,22 +111,23 @@ namespace SmartVault.DataGeneration
                 userId++;
             }
         }
-        private Document GetDocumentData(int id, int userId, int docCounter)
+        public Document GetDocumentData(int id, int userId, int docCounter)
         {
-            return new Document
+            var document =  new Document
             {
                 Id = id,
                 Name = Constants.DOCUMENT + userId + Constants.HYPHEN + docCounter + Constants.EXTENSION,
-                FilePath = _dataSeedConfiguration.DocumentFilePath,
                 Length = _dataSeedConfiguration.DocumentFileLenght,
                 AccountId = userId,
             };
+            document.FilePath = Path.Combine(_path, document.Name);
+            return document;
         }
-        private User GetUserData(int id)
+        public User GetUserData(int id)
         {
             string firstName = Constants.FNAME + id;
             string lastName = Constants.LNAME + id;
-            DateTime dateOfBirth = RandomDay();
+            DateTime dateOfBirth = ContentGeneration.RandomDay();
             int accountId = id;
             string username = Constants.USERNAME + Constants.HYPHEN + id;
             string password = Constants.PASSWORD;
@@ -160,7 +143,17 @@ namespace SmartVault.DataGeneration
                 CreatedDate = DateTime.UtcNow
             };
         }
-        private Account GetAccount(int id)
+        public void CreateFileData(string name)
+        {
+            string filePath = Path.Combine(_path, name);
+
+            if (!Directory.Exists(_path))
+            {
+                Directory.CreateDirectory(_path);
+            }
+            File.WriteAllText(filePath, _dataSeedConfiguration.Content);
+        }
+        public Account GetAccount(int id)
         {
             return new Account
             {
@@ -168,14 +161,6 @@ namespace SmartVault.DataGeneration
                 Name = Constants.ACCOUNT + id,
                 CreatedDate = DateTime.UtcNow
             };
-        }
-        private DateTime RandomDay()
-        {
-            DateTime start = new DateTime(1985, 1, 1);
-            Random gen = new Random();
-            int range = (DateTime.Today - start).Days;
-            while (true)
-                return start.AddDays(gen.Next(range));
         }
 
         public void Dispose()

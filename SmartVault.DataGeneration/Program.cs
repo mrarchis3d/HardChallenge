@@ -1,16 +1,15 @@
 ﻿using Microsoft.Extensions.Configuration;
+using SmartVault.DataGeneration.Utils;
 using SmartVault.Library;
 using SmartVault.Program.BusinessObjects;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using static System.Net.WebRequestMethods;
 
 namespace SmartVault.DataGeneration
 {
@@ -24,24 +23,35 @@ namespace SmartVault.DataGeneration
 
             SQLiteConnection.CreateFile(configuration["DatabaseFileName"]);
             string connectionString = string.Format(configuration?["ConnectionStrings:DefaultConnection"] ?? "", configuration?["DatabaseFileName"]);
-            GenerateDataSeed(connectionString);
-            
+
+            //// This going to generate 100 users and 20 docs for each user, in local and database
+            /// please modify what amount you want for both
+            /// create localdocuments or not with the boolean
+            GenerateDataSeed(connectionString, 20, 20, true);
             Console.ReadLine();
         }
-
-        private static void GenerateDataSeed(string connectionString)
+        /// <summary>
+        /// Generate data seed
+        /// </summary>
+        /// <param name="connectionString"></param>
+        /// <param name="bulkUser">amount of users to create</param>
+        /// <param name="bulkDocs">amount of documents of each user</param>
+        /// <param name="createLocalDocuments">create local documents</param>
+        private static void GenerateDataSeed(string connectionString, int bulkUser, int bulkDocs, bool createLocalDocuments = false)
         {
             string[] files = Directory.GetFiles(@"..\..\..\BusinessObjectSchema");
+            var content = ContentGeneration.GetContent(32);
+            File.WriteAllText("files\\TestDoc.txt", content);
             var document = new FileInfo("files\\TestDoc.txt");
             List<Document> documents = new List<Document>();
             using (var dataSeed = new DataSeedService(
                 new DataSeedConfiguration
                 {
                     ConnectionString = connectionString,
-                    BulkUsers = 100,
-                    BulkDocuments = 10000,
+                    BulkUsers = bulkUser,
+                    BulkDocuments = bulkDocs,
+                    Content = content,
                     DocumentFileLenght = document.Length,
-                    DocumentFilePath = document.FullName
                 }))
             {
                 dataSeed.GenerateData();
@@ -49,29 +59,23 @@ namespace SmartVault.DataGeneration
                 Parallel.Invoke(
                     () =>
                     {
-                        dataSeed.ExecuteDDLScripts(GetAllBussinessScript(files));
-                        dataSeed.ExecuteDMLScripts();
+                        dataSeed.ExecuteDDLScripts( ScriptGeneration.GetAllBussinessScript(files));
+                        dataSeed.ExecuteDMLScripts(true);
+                        Console.WriteLine("Database operations finished");   
                     },
                     () =>
                     {
-                        dataSeed.GenerateLocalDocuments();
+                        if (createLocalDocuments)
+                        {
+                            dataSeed.GenerateLocalDocuments();
+                            Console.WriteLine("Local Files operations finished");
+                        }else
+                            Console.WriteLine("No local files");
                     }
                 );
                 
             }
 
-        }
-
-        private static string GetAllBussinessScript(string[] files)
-        {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < files.Length; i++)
-            {
-                var serializer = new XmlSerializer(typeof(BusinessObject));
-                var businessObject = serializer.Deserialize(new StreamReader(files[i])) as BusinessObject;
-                sb.Append(businessObject?.Script + Environment.NewLine);
-            }
-            return sb.ToString();
         }
 
     }

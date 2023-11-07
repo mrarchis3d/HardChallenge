@@ -6,6 +6,11 @@ using Dapper;
 using Moq.Dapper;
 using System.Data.SQLite;
 using System.Reflection;
+using SmartVault.Program.BusinessObjects;
+using System.Reflection.Metadata;
+using SmartVault.DataGeneration.Utils;
+using System.Xml.Linq;
+using System;
 
 namespace SmartVault.Test
 {
@@ -18,43 +23,85 @@ namespace SmartVault.Test
         [SetUp]
         public void Setup()
         {
-            _connectionString = "data source=unitTests.sqlite";
-            string path = Directory.GetParent(Assembly.GetExecutingAssembly().Location) + "\\files";
-            string filePath = Path.Combine(path, "TestDoc.txt");
+
         }
 
         [Test]
-        public void ExecuteDDLScripts_ShouldExecuteScriptsSuccessfully()
+        public void GetUserData_ReturnsValidUser()
         {
-            // Configura una base de datos SQLite en memoria
-            using (IDbConnection connection = new SQLiteConnection("DataSource=:memory:"))
-            {
-                connection.Open();
+            var dataSeedService = new DataSeedService(new DataSeedConfiguration());
+            int userId = 1; 
+            User? user = dataSeedService.GetUserData(userId);
+            Assert.IsNotNull(user);
+            Assert.AreEqual(userId, user!.Id);
+            Assert.AreEqual("FName1", user!.FirstName);
 
-                // Crea una tabla de prueba para simular el script
-                connection.Execute("CREATE TABLE TestTable (Id INT, Name TEXT)");
-
-                // Instancia DataSeedService
-                var documentInfo = new FileInfo("CREATE TABLE TestTable (Id INT, Name TEXT)");
-                var dataSeedService = new DataSeedService(new DataSeedConfiguration
-                {
-                    ConnectionString = _connectionString,
-                    BulkUsers = 1,
-                    BulkDocuments = 5,
-                    DocumentFileLenght = 256,
-                    DocumentFilePath = "myTestDoc.txt"
-                });
-
-                // Scripts de prueba
-                var scripts = "INSERT INTO TestTable (Id, Name) VALUES (1, 'Test1')";
-
-                // Ejecuta el método y verifica si se ejecuta el script
-                int executedScript = dataSeedService.ExecuteDDLScripts(scripts);
-
-                // Verifica que se haya ejecutado el script con éxito
-                Assert.AreEqual(1, executedScript);
-            }
         }
 
+        [Test]
+        public void GetAccount_ReturnsValidAccount()
+        {
+            var dataSeedService = new DataSeedService(new DataSeedConfiguration());
+            int accountId = 1;
+            Account? account = dataSeedService.GetAccount(accountId);
+            Assert.IsNotNull(account);
+            Assert.AreEqual(accountId, account.Id);
+            Assert.AreEqual("Account1", account.Name); 
+
+        }
+
+        [Test]
+        public void RandomDay_GeneratesValidRandomDate()
+        {
+            DateTime randomDate = ContentGeneration.RandomDay();
+            DateTime startDate = new DateTime(1985, 1, 1);
+            DateTime endDate = DateTime.Today;
+            Assert.GreaterOrEqual(randomDate, startDate);
+            Assert.LessOrEqual(randomDate, endDate);
+        }
+
+        [Test]
+        public void GenerateData_PopulatesUserDataAccountDataAndDocumentData()
+        {
+            var dataSeedConfiguration = new DataSeedConfiguration
+            {
+                BulkUsers = 5, 
+                BulkDocuments = 3,
+
+            };
+            var dataSeedService = new DataSeedService(dataSeedConfiguration);
+
+            dataSeedService.GenerateData();
+
+            // Assert
+            Assert.IsNotNull(dataSeedService.GetUsers);
+            Assert.IsNotNull(dataSeedService.GetAccounts);
+            Assert.IsNotNull(dataSeedService.GetDocuments);
+
+            Assert.AreEqual(5, dataSeedService.GetUsers.Count); 
+            Assert.AreEqual(5, dataSeedService.GetAccounts.Count); 
+            Assert.AreEqual(5 * 3, dataSeedService.GetDocuments.Count);
+        }
+
+        [Test]
+        public void GetDocumentData_ReturnsValidDocument()
+        {
+            // Arrange
+            var dataSeedConfiguration = new DataSeedConfiguration
+            {
+                DocumentFileLenght = 1024
+            };
+            var dataSeedService = new DataSeedService(dataSeedConfiguration);
+            int id = 1; // Puedes ajustar el ID según tus necesidades
+            int userId = 2; // Puedes ajustar el usuario según tus necesidades
+            int docCounter = 3; // Puedes ajustar el contador según tus necesidades
+
+            Program.BusinessObjects.Document? document = dataSeedService.GetDocumentData(id, userId, docCounter);
+            Assert.IsNotNull(document);
+            Assert.AreEqual(id, document.Id);
+            Assert.AreEqual("Document2-3.txt", document.Name);
+            Assert.AreEqual(1024, document.Length);
+            Assert.AreEqual(userId, document.AccountId);
+        }
     }
 }
