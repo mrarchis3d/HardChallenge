@@ -1,11 +1,16 @@
 ﻿using Microsoft.Extensions.Configuration;
 using SmartVault.Library;
+using SmartVault.Program.BusinessObjects;
 using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
+using static System.Net.WebRequestMethods;
 
 namespace SmartVault.DataGeneration
 {
@@ -18,30 +23,49 @@ namespace SmartVault.DataGeneration
                 .AddJsonFile("appsettings.json").Build();
 
             SQLiteConnection.CreateFile(configuration["DatabaseFileName"]);
-            CreateFileData();
+            string connectionString = string.Format(configuration?["ConnectionStrings:DefaultConnection"] ?? "", configuration?["DatabaseFileName"]);
+            GenerateDataSeed(connectionString);
+            
+            Console.ReadLine();
+        }
+
+        private static void GenerateDataSeed(string connectionString)
+        {
             string[] files = Directory.GetFiles(@"..\..\..\BusinessObjectSchema");
             var document = new FileInfo("files\\TestDoc.txt");
-            string connectionString = string.Format(configuration?["ConnectionStrings:DefaultConnection"] ?? "", configuration?["DatabaseFileName"]);
+            List<Document> documents = new List<Document>();
             using (var dataSeed = new DataSeedService(
-                new DataSeedConfiguration { 
+                new DataSeedConfiguration
+                {
                     ConnectionString = connectionString,
-                    BulkUsers = 100, 
-                    BulkDocuments = 10000, 
+                    BulkUsers = 100,
+                    BulkDocuments = 10000,
                     DocumentFileLenght = document.Length,
                     DocumentFilePath = document.FullName
-                    }))
+                }))
             {
                 dataSeed.GenerateData();
-                dataSeed.ExecuteDDLScripts(GetAllBussinessScript(files));
-                dataSeed.ExecuteDMLScripts();
+                documents = dataSeed.GetDocuments;
+                Parallel.Invoke(
+                    () =>
+                    {
+                        dataSeed.ExecuteDDLScripts(GetAllBussinessScript(files));
+                        dataSeed.ExecuteDMLScripts();
+                    },
+                    () =>
+                    {
+                        dataSeed.GenerateLocalDocuments();
+                    }
+                );
+                
             }
-            Console.ReadLine();
+
         }
 
         private static string GetAllBussinessScript(string[] files)
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i <= 2; i++)
+            for (int i = 0; i < files.Length; i++)
             {
                 var serializer = new XmlSerializer(typeof(BusinessObject));
                 var businessObject = serializer.Deserialize(new StreamReader(files[i])) as BusinessObject;
@@ -49,22 +73,6 @@ namespace SmartVault.DataGeneration
             }
             return sb.ToString();
         }
-        private static void CreateFileData()
-        {
-            string path = Directory.GetParent(Assembly.GetExecutingAssembly().Location) + "\\files";
-            string filePath = Path.Combine(path, "TestDoc.txt"); // Ruta completa del archivo
 
-            string content = $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}";
-
-
-            // Asegúrate de que el directorio exista, si no, créalo
-            if (!Directory.Exists(path))
-            {
-                Directory.CreateDirectory(path);
-            }
-
-            File.WriteAllText(filePath, content);
-
-        }
     }
 }

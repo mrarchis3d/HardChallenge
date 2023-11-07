@@ -1,13 +1,11 @@
 ﻿using Dapper;
-using SmartVault.Library;
 using SmartVault.Program.BusinessObjects;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Text;
-using System.Xml.Serialization;
+using System.Reflection;
 using Document = SmartVault.Program.BusinessObjects.Document;
 
 namespace SmartVault.DataGeneration
@@ -19,8 +17,10 @@ namespace SmartVault.DataGeneration
         private List<Account>? _accountData;
         private List<Document>? _documentData;
         private DataSeedConfiguration _dataSeedConfiguration;
+        private readonly string _content;
+        private readonly string _path;
 
-
+        public List<Document> GetDocuments => _documentData ?? (_documentData = new List<Document>());
 
         public DataSeedService(DataSeedConfiguration dataSeedConfiguration)
         {
@@ -28,7 +28,12 @@ namespace SmartVault.DataGeneration
             _userData = new List<User>();
             _accountData = new List<Account>();
             _documentData = new List<Document>();
+            _content = Getcontent;
+            _path = Directory.GetParent(Assembly.GetExecutingAssembly().Location) + "\\files";
         }
+
+        private string Getcontent => "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine + "This is my test document" + Environment.NewLine;
+
         public int ExecuteDDLScripts(string script)
         {
             int executedScript = 0;
@@ -84,6 +89,26 @@ namespace SmartVault.DataGeneration
                 ConsoleUtils.PrintSeedingInformation(connection);
             }
             return executedScript;
+        }
+
+        public void GenerateLocalDocuments()
+        {
+            foreach (var item in _documentData!)
+            {
+                CreateFileData(item.Name);
+            }
+        }
+
+        private void CreateFileData(string name)
+        {
+
+            string filePath = Path.Combine(_path, name);
+
+            if (!Directory.Exists(_path))
+            {
+                Directory.CreateDirectory(_path);
+            }
+            File.WriteAllText(filePath, _content);
         }
 
         public void GenerateData()
